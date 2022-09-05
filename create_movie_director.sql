@@ -8,10 +8,17 @@ create or replace procedure create_movie_with_director(
     v_id_director stars.id%type;
 begin
     -- director exists ?
-    select id into v_id_director from stars where name = p_director_name;
+    begin 
+        select id into v_id_director from stars where name = p_director_name;
+    exception
+        when NO_DATA_FOUND then
+            DBMS_OUTPUT.PUT_LINE('No director with this name: ' || p_director_name);
+            insert into stars (name) values (p_director_name);
+            v_id_director := ISEQ$$_73701.currval;
+    end;
+    insert into movies (title, year, id_director) values
+            (p_title, p_year, v_id_director);
 exception
-    when NO_DATA_FOUND then
-        DBMS_OUTPUT.PUT_LINE('No director with this name: ' || p_director_name);
     when TOO_MANY_ROWS  then 
         DBMS_OUTPUT.PUT_LINE('Several director with this name: ' || p_director_name);
     when others then 
@@ -39,3 +46,5 @@ begin
     create_movie_with_director('Blitz', 2030, 'Steve McQueen');
 end;
 /
+
+select * from movies where title = 'OSS 117: Le Caire, nid d''espions';
