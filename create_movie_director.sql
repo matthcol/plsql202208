@@ -7,6 +7,11 @@ create or replace procedure create_movie_with_director(
 ) is
     v_id_director stars.id%type;
 begin
+    -- check parameters
+    if p_title is null or p_year is null then
+        DBMS_OUTPUT.PUT_LINE('Can''t insert movie with no title or year');
+        return;
+    end if;
     -- director exists ?
     begin 
         select id into v_id_director from stars where name = p_director_name;
@@ -22,7 +27,10 @@ exception
     when TOO_MANY_ROWS  then 
         DBMS_OUTPUT.PUT_LINE('Several director with this name: ' || p_director_name);
     when others then 
-        DBMS_OUTPUT.PUT_LINE('Erreur inconnue');
+        DBMS_OUTPUT.PUT_LINE('Erreur inconnue, code: '
+            || SQLCODE
+            || ', message: '
+            || SQLERRM);
 end;
 /
 
@@ -47,4 +55,9 @@ begin
 end;
 /
 
-select * from movies where title = 'OSS 117: Le Caire, nid d''espions';
+-- test other errors (NULL constraint exception)
+declare
+begin
+    create_movie_with_director(NULL, NULL, 'David Leitch');
+end;
+/
